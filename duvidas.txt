@@ -1,0 +1,6 @@
+Dúvidas sobre o código:
+1.Tem problema os TID´s serem em números menores, como de 1 a 4, diferentemente do uqe ocorre no linux?
+2.Há algum problema em alguns valores se repetirem sequencialmente?
+3.Como é uma faixa de 20 a 30, esses valores que cada thread roda antes de finalizar podem ser variáveis entre si 
+e em cada execução do código, correto?
+4.A thread 4, por lógica, é sempre a última a finalizar, correto?
