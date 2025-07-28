@@ -47,7 +47,7 @@ void *producer(void *args) {
     
 
 void *consumer(void *args) {
-    int iteracao = 1;
+    int iteracao = 0;
     pthread_t id = pthread_self(); // pega o ID da thread
 
     while(1) {
