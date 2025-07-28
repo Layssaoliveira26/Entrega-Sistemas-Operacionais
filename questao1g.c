@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#define NUM_THREADS_P 3
+#define NUM_THREADS_P 6
+#define NUM_THREADS_C 2
 #define B_SIZE 5
 
 int buffer[B_SIZE];
@@ -18,7 +19,6 @@ pthread_cond_t cond_producer; // condição produtor
 void *producer(void *args) {
     int n = *((int*) args); // quantidade de valores gerados
     pthread_t id = pthread_self(); // pega o ID da thread
-    srand(time(NULL));
    
     for (int i = 0; i < n; i++) {
         int preco = rand() % 1000 + 1; // faz com que os preços sejam aleatórios
@@ -32,14 +32,14 @@ void *producer(void *args) {
         cont++; // adiciona item ao buffer
 
         printf("(P) TID: %lu | VALOR: R$ %d | ITERAÇÃO: %d\n", id, preco, i+1);
-        pthread_cond_signal(&cond_consumer); // manda sinal de que já existe dado para consumidor
+        pthread_cond_signal(&cond_consumer); // manda sinal de que já existe dado para consumidor, acordar apenas 1 é suficiente
         pthread_mutex_unlock(&mutex);
         sleep((rand() % 5) + 1); // adiciona o delay
     }
 
     pthread_mutex_lock(&mutex);
         p_ativas--; //reduz o número de threads produtoras ativas.
-        pthread_cond_signal(&cond_consumer); // acorda a consumidora para testar novamente.
+        pthread_cond_broadcast(&cond_consumer); // acorda as consumidoras para testar novamente. Todas precisam saber se a condição de finalizar foi atendida.
     pthread_mutex_unlock(&mutex);
     printf("(P) TID: %lu finalizou\n", id);
     return NULL;
@@ -47,6 +47,7 @@ void *producer(void *args) {
     
 
 void *consumer(void *args) {
+    srand(time(NULL));
     int iteracao = 0;
     pthread_t id = pthread_self(); // pega o ID da thread
 
@@ -85,15 +86,19 @@ int main() {
         pthread_create(&producer_thread[i], NULL, &producer, &quant[i]);
     }
 
-    pthread_t consumer_thread;
-    pthread_create(&consumer_thread, NULL, &consumer, NULL);
+    pthread_t consumer_thread[NUM_THREADS_C];
+    for (int i = 0; i < NUM_THREADS_C; i++) {
+        pthread_create(&consumer_thread[i], NULL, &consumer, NULL);
+    }
 
     for (int i = 0; i < NUM_THREADS_P; i++) {
         pthread_join(producer_thread[i], NULL);
     }
 
-    pthread_join(consumer_thread, NULL);
-    pthread_mutex_destroy(&mutex);
+    for (int i = 0; i < NUM_THREADS_C; i++) {
+        pthread_join(consumer_thread[i], NULL);
+    }
 
+    pthread_mutex_destroy(&mutex);
     return 0;
 }
