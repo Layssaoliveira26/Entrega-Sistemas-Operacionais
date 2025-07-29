@@ -79,8 +79,8 @@ int main() {
 
     printf("Valor de PI: %.9lf\n", 4.0 * global_sum);
     //verificar com Botelho se Total Processo (Parelo) é a média do tempo das thread
-    printf("Tempo Processo (Paralelo): %.2lf s\n", total_time);
-    printf("Tempo Threads: %.2lf s\n", time_by_thread);
+    printf("Total Processo (Paralelo): %.2lf s\n", total_time);
+    printf("Total Threads: %.2lf s\n", time_by_thread);
 
     pthread_mutex_destroy(&lock);
     return 0;
