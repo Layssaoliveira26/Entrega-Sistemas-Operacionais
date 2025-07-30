@@ -8,38 +8,37 @@
 #define B_SIZE 5
 
 int buffer[B_SIZE];
-int cont, in, out = 0; // inicializa o contador do buffer e seus controladores
-int p_ativas = NUM_THREADS_P; // inicializa o número de produdores ativos
+int cont, in, out = 0; 
+int p_ativas = NUM_THREADS_P; 
 
 pthread_mutex_t mutex;
-pthread_cond_t cond_consumer; // condição consumidor
-pthread_cond_t cond_producer; // condição produtor
+pthread_cond_t cond_consumer; 
+pthread_cond_t cond_producer; 
 
 void *producer(void *args) {
-    int n = *((int*) args); // quantidade de valores gerados
-    pthread_t id = pthread_self(); // pega o ID da thread
-    srand(time(NULL));
+    int n = *((int*) args); 
+    pthread_t id = pthread_self(); /
    
     for (int i = 0; i < n; i++) {
-        int preco = rand() % 1000 + 1; // faz com que os preços sejam aleatórios
+        int preco = rand() % 1000 + 1; 
        
         pthread_mutex_lock(&mutex);
-        while (cont == B_SIZE) { // enquanto o buffer estiver cheio
-            pthread_cond_wait(&cond_producer, &mutex); // produtor espera
+        while (cont == B_SIZE) { 
+            pthread_cond_wait(&cond_producer, &mutex); 
         }
         buffer[in] = preco;
-        in = (in + 1) % B_SIZE; // atualiza a entrada do buffer
-        cont++; // adiciona item ao buffer
+        in = (in + 1) % B_SIZE; 
+        cont++; 
 
         printf("(P) TID: %lu | VALOR: R$ %d | ITERAÇÃO: %d\n", id, preco, i+1);
-        pthread_cond_signal(&cond_consumer); // manda sinal de que já existe dado para consumidor
+        pthread_cond_signal(&cond_consumer); 
         pthread_mutex_unlock(&mutex);
-        sleep((rand() % 5) + 1); // adiciona o delay
+        sleep((rand() % 5) + 1); 
     }
 
     pthread_mutex_lock(&mutex);
-        p_ativas--; //reduz o número de threads produtoras ativas.
-        pthread_cond_signal(&cond_consumer); // acorda a consumidora para testar novamente.
+        p_ativas--;
+        pthread_cond_signal(&cond_consumer); 
     pthread_mutex_unlock(&mutex);
     printf("(P) TID: %lu finalizou\n", id);
     return NULL;
@@ -48,26 +47,26 @@ void *producer(void *args) {
 
 void *consumer(void *args) {
     int iteracao = 0;
-    pthread_t id = pthread_self(); // pega o ID da thread
+    pthread_t id = pthread_self(); 
 
     while(1) {
         pthread_mutex_lock(&mutex);
-        while (cont < B_SIZE && p_ativas > 0) { // espera enquanto o buffer não estiver cheio e ainda houverem produtoras ativas
+        while (cont < B_SIZE && p_ativas > 0) { 
             pthread_cond_wait(&cond_consumer, &mutex);
         }
-        if (p_ativas == 0 && cont < B_SIZE) { // se não tiverem mais rodutoras ativas e não houver dados suficientes para a média (buffer não está cheio)
+        if (p_ativas == 0 && cont < B_SIZE) { 
             pthread_mutex_unlock(&mutex);
-            break; // termina
+            break; 
         }
         int soma = 0;
-        for (int i = 0; i < B_SIZE; i++) { //percorre o buffer
-            soma += buffer[out]; // adiciona o item da saída a soma
-            out = (out + 1) % B_SIZE; // atualiza a posição de saída do buffer
-            cont--; // remove item do buffer
+        for (int i = 0; i < B_SIZE; i++) { 
+            soma += buffer[out]; 
+            out = (out + 1) % B_SIZE; 
+            cont--; 
         }
-        pthread_cond_broadcast(&cond_producer); // avisa as produtoras que há espaço no buffer
+        pthread_cond_broadcast(&cond_producer); 
         pthread_mutex_unlock(&mutex);
-        float media = (float)soma / B_SIZE; // faz a media dos valores do buffer
+        float media = (float)soma / B_SIZE; 
         printf("(C) TID: %lu | MEDIA: R$ %.2f | ITERAÇÂO: %d\n", id, media, iteracao + 1);
         iteracao++;
     }
@@ -76,6 +75,7 @@ void *consumer(void *args) {
 }
 
 int main() {
+    srand(time(NULL));
     int quant [NUM_THREADS_P];
     pthread_mutex_init(&mutex, NULL);
 
